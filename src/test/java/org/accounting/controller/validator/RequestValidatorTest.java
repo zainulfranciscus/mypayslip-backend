@@ -126,4 +126,11 @@ public class RequestValidatorTest {
         assertTrue(validator.hasErrors());
         assertEquals(mustNotBeBlank(SUPER_RATE), validator.validate());
     }
+
+    @Test
+    public void shouldHasValidationError_whenSuperIsLessThan0() {
+        validator.validateSuperRate("-1");
+        assertTrue(validator.hasErrors());
+        assertEquals(cannotBeLessThan0(SUPER_RATE), validator.validate());
+    }
 }

@@ -69,6 +69,10 @@ public class RequestValidator {
             builder.append(mustBeAnumber(SUPER_RATE));
             return;
         }
+
+        if (isLessThan0(superRate)) {
+            builder.append(cannotBeLessThan0(SUPER_RATE));
+        }
     }
 
     public String validate() {
