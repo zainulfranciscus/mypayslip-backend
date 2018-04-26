@@ -9,7 +9,7 @@ import static org.junit.Assert.*;
 
 public class PayslipRequestValidatorTest extends RequestValidatorTest{
 
-    protected static final String NEGATIVE_NUMBER = "-1";
+    public static final String NEGATIVE_NUMBER = "-1";
     private PayslipRequestValidator payslipRequestValidator;
 
     public PayslipRequestValidatorTest() {

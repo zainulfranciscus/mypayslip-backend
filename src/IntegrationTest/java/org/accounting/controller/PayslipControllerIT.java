@@ -3,6 +3,7 @@ package org.accounting.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.accounting.controller.response.PayslipResponse;
 import org.accounting.controller.response.TaxResponse;
+import org.accounting.model.employee.Employee;
 import org.accounting.model.employee.EmployeeBuilder;
 import org.accounting.model.payslip.Payslip;
 import org.accounting.model.payslip.PayslipBuilder;
@@ -23,7 +24,9 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import static junit.framework.TestCase.assertNull;
 import static org.accounting.controller.PayslipController.SUCCESS_REQUEST_MESSAGE;
+import static org.accounting.controller.validator.PayslipRequestValidatorTest.NEGATIVE_NUMBER;
 import static org.accounting.controller.validator.RequestValidator.SALARY;
 import static org.accounting.controller.validator.RequestValidator.cannotBeLessThan0;
 import static org.junit.Assert.assertEquals;
@@ -83,12 +86,7 @@ public class PayslipControllerIT extends ControllerTest {
                 .expectBody(String.class)
                 .isEqualTo(payslipResponseJsonTester.write(response).getJson());
 
-        EmployeeBuilder employeeBuilder = new EmployeeBuilder();
-        employeeBuilder.withFirstName(payslip.getEmployeeFirstName());
-        employeeBuilder.withLastName(payslip.getEmployeeLastName());
-        employeeBuilder.withPayDate(payslip.getPayDate());
-
-        assertEquals(payslip, payslipService.findPayslip(employeeBuilder.build()));
+        assertEquals(payslip, payslipService.findPayslip(employee(payslip)));
     }
 
     @Test
@@ -110,6 +108,57 @@ public class PayslipControllerIT extends ControllerTest {
                 .expectBody(String.class)
                 .isEqualTo(payslipResponseJsonTester.write(response).getJson());
 
+    }
+
+    @Test
+    public void shouldReturnABadHTTPResponse_whenAmountsInPayslipAreNegative() {
+
+
+        BigDecimal negativeNumber = new BigDecimal(NEGATIVE_NUMBER);
+        String firstName = "Employee with Negative Payslip";
+        String lastName = "Test Employee";
+
+        Payslip payslip = getPayslipBuilder().withAnnualIncome(negativeNumber)
+                .withGrossIncome(negativeNumber)
+                .withIncomeTax(negativeNumber)
+                .withNetIncome(negativeNumber)
+                .withSuperAmount(negativeNumber)
+                .withPay(negativeNumber)
+                .withFirstName(firstName)
+                .withLastName(lastName).build();
+
+        String payslipRequest = String.format(SAVE_PAYSLIP_REQUEST_PARAMETERS,
+                NEGATIVE_NUMBER,
+                NEGATIVE_NUMBER,
+                NEGATIVE_NUMBER,
+                NEGATIVE_NUMBER,
+                NEGATIVE_NUMBER,
+                NEGATIVE_NUMBER,
+                firstName,
+                lastName);
+
+
+        this.webClient.post().uri(payslipRequest)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody(String.class)
+                .returnResult().getResponseBody().contains("300");
+
+        assertNull(payslipService.findPayslip(employee(payslip)));
+    }
+
+
+
+
+    private Employee employee(Payslip payslip){
+
+        EmployeeBuilder employeeBuilder = new EmployeeBuilder();
+        employeeBuilder.withFirstName(payslip.getEmployeeFirstName());
+        employeeBuilder.withLastName(payslip.getEmployeeLastName());
+        employeeBuilder.withPayDate(payslip.getPayDate());
+
+        return employeeBuilder.build();
     }
 
 }
